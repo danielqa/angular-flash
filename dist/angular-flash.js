@@ -1,6 +1,6 @@
 /*! angular-flash - v1.0.0 - 2015-03-19
-* https://github.com/sachinchoolur/angular-flash
-* Copyright (c) 2015 Sachin; Licensed MIT */
+ * https://github.com/sachinchoolur/angular-flash
+ * Copyright (c) 2015 Sachin; Licensed MIT */
 (function() {
     'use strict';
     var app = angular.module('flash', []);
@@ -8,7 +8,7 @@
     app.run(['$rootScope', function($rootScope) {
         // initialize variables
         $rootScope.flash = {};
-        $rootScope.flash.text = '';
+        $rootScope.flash.text = [];
         $rootScope.flash.type = '';
         $rootScope.flash.timeout = 5000;
         $rootScope.hasFlash = false;
@@ -43,7 +43,19 @@
     app.directive('flashMessage', ['$compile', '$rootScope', function($compile, $rootScope) {
         return {
             restrict: 'A',
-            template: '<div role="alert" ng-show="hasFlash" class="alert {{flash.addClass}} alert-{{flash.type}} alert-dismissible ng-hide alertIn alertOut "> <span dynamic="flash.text"></span> <button type="button" class="close" close-flash><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button> </div>',
+            template: '<div role="alert" ng-show="hasFlash" class="alert {{flash.addClass}} alert-{{flash.type}} alert-dismissible ng-hide alertIn alertOut">' +
+                        '<button type="button" class="close" close-flash>' +
+                            '<span aria-hidden="true">&times;</span>' +
+                            '<span class="sr-only">Close</span>' +
+                        '</button>' +
+                        '<span class="glyphicon glyphicon-ok" ng-if="flash.type === \'success\'"></span>' +
+                        '<span class="glyphicon glyphicon-warning-sign glyphicon-alert-big" ng-if="flash.type === \'danger\'"></span>' +
+                        '<span class="glyphicon glyphicon-info-sign glyphicon-alert-big" ng-if="flash.type === \'info\'"></span>' +
+                        '<span class="glyphicon glyphicon-exclamation-sign glyphicon-alert-big" ng-if="flash.type === \'warning\'"></span>' +
+                        '<div ng-repeat="message in flash.text">' +
+                            '<span dynamic="message"></span>' +
+                        '</div>' +
+                      '</div>',
             link: function(scope, ele, attrs) {
                 // get timeout value from directive attribute and set to flash timeout
                 $rootScope.flash.timeout = parseInt(attrs.flashMessage, 10);
@@ -51,8 +63,8 @@
         };
     }]);
 
-    app.factory('Flash', ['$rootScope', '$timeout',
-        function($rootScope, $timeout) {
+    app.factory('Flash', ['$rootScope', '$window', '$timeout',
+        function($rootScope, $window, $timeout) {
 
             var dataFactory = {},
                 timeOut;
@@ -62,7 +74,7 @@
                 var $this = this;
                 $timeout.cancel(timeOut);
                 $rootScope.flash.type = type;
-                $rootScope.flash.text = text;
+                $rootScope.flash.text = angular.isArray(text) ? text : [text];
                 $rootScope.flash.addClass = addClass;
                 $timeout(function() {
                     $rootScope.hasFlash = true;
@@ -70,6 +82,8 @@
                 timeOut = $timeout(function() {
                     $this.dismiss();
                 }, $rootScope.flash.timeout);
+
+                angular.element('body')[0].scrollTop = 0;
             };
 
             // Cancel flashmessage timeout function
